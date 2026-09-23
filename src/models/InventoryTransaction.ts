@@ -4,7 +4,8 @@ import { inventoryTransactionReasons, type InventoryTransactionReason } from "@/
 export { inventoryTransactionReasons };
 
 export interface IInventoryTransaction {
-  material: Types.ObjectId;
+  material?: Types.ObjectId;
+  product?: Types.ObjectId;
   quantityChange: number;
   reason: InventoryTransactionReason;
   date: Date;
@@ -19,7 +20,8 @@ export type InventoryTransactionModel = Model<IInventoryTransaction>;
 
 const inventoryTransactionSchema = new Schema<IInventoryTransaction>(
   {
-    material: { type: Schema.Types.ObjectId, ref: "Material", required: true },
+    material: { type: Schema.Types.ObjectId, ref: "Material" },
+    product: { type: Schema.Types.ObjectId, ref: "Product" },
     quantityChange: { type: Number, required: true },
     reason: { type: String, enum: inventoryTransactionReasons, required: true },
     date: { type: Date, required: true, default: Date.now },

@@ -13,6 +13,7 @@ type ProductRecord = {
   _id: unknown;
   name: string;
   sku: string;
+  category?: string;
   description?: string;
   sellingPrice: number;
   materialCost: number;
@@ -29,6 +30,7 @@ function serializeProduct(product: ProductRecord) {
     id: String(product._id),
     name: product.name,
     sku: product.sku,
+    category: product.category ?? "",
     description: product.description ?? "",
     sellingPrice: product.sellingPrice,
     materialCost: product.materialCost,

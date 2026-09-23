@@ -1,16 +1,17 @@
 "use client";
 
-import { Bell, CalendarRange, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { getPageTitle } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { NotificationCenter } from "@/components/layout/NotificationCenter";
 
 type TopBarProps = {
   pathname: string;
-  dateRangeLabel: string;
+  dateRangePicker: React.ReactNode;
   onMenuClick: () => void;
 };
 
-export function TopBar({ pathname, dateRangeLabel, onMenuClick }: TopBarProps) {
+export function TopBar({ pathname, dateRangePicker, onMenuClick }: TopBarProps) {
   const pageTitle = getPageTitle(pathname);
 
   return (
@@ -43,18 +44,8 @@ export function TopBar({ pathname, dateRangeLabel, onMenuClick }: TopBarProps) {
       </label>
 
       <div className="ml-auto flex items-center gap-2">
-        <div className="hidden items-center gap-1.5 rounded-md border border-gf-border bg-gf-surface px-2.5 py-1.5 text-[11px] text-gf-secondary lg:flex">
-          <CalendarRange className="size-3.5 text-gf-muted" />
-          {dateRangeLabel}
-        </div>
-        <button
-          type="button"
-          className="relative rounded-md border border-gf-border bg-gf-surface p-2 text-gf-secondary hover:text-gf-text"
-          aria-label="Notifications"
-        >
-          <Bell className="size-3.5" />
-          <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-gf-orange" />
-        </button>
+        {dateRangePicker}
+        <NotificationCenter />
       </div>
     </header>
   );

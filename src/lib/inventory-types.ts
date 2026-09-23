@@ -17,6 +17,7 @@ export type MaterialResponse = {
 export type InventoryTransactionResponse = {
   id: string;
   material: { id: string; name: string; sku: string };
+  product?: { id: string; name: string; sku: string } | null;
   quantityChange: number;
   reason: InventoryTransactionReason;
   date: string;

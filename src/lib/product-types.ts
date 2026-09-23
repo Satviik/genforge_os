@@ -5,6 +5,7 @@ export type ProductResponse = ProductCostInputs &
     id: string;
     name: string;
     sku: string;
+    category: string;
     description: string;
     active: boolean;
     createdAt?: string;

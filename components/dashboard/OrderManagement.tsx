@@ -10,6 +10,7 @@ import { OrderFormDialog, type OrderFormValues, type OrderOptions } from "@/comp
 import { formatINR } from "@/lib/format";
 import type { OrderResponse } from "@/src/lib/order-types";
 import type { OrderChannel, OrderStatus, PaymentStatus } from "@/src/models/Order";
+import { useReportingPeriod } from "@/components/layout/ReportingPeriodContext";
 
 const channelLabels: Record<OrderChannel, string> = { website: "Website", instagram: "Instagram", direct: "Direct", whatsapp: "WhatsApp", marketplace: "Marketplace", other: "Other" };
 const statusLabels: Record<OrderStatus, string> = { new: "New", confirmed: "Confirmed", production: "Production", ready: "Ready", shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled" };
@@ -19,6 +20,7 @@ function paymentTone(status: PaymentStatus) { return status === "paid" ? "succes
 function orderTone(status: OrderStatus) { return status === "delivered" ? "success" : status === "cancelled" ? "neutral" : "orange"; }
 
 export function OrderManagement() {
+  const { range } = useReportingPeriod();
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [summary, setSummary] = useState({ totalOrders: 0, revenue: 0, paidOrders: 0, pendingPayments: 0 });
   const [options, setOptions] = useState<OrderOptions>({ customers: [], teamMembers: [], products: [] });
@@ -48,8 +50,13 @@ export function OrderManagement() {
         if (paymentStatus !== "all") params.set("paymentStatus", paymentStatus);
         if (orderStatus !== "all") params.set("status", orderStatus);
         if (teamMember !== "all") params.set("teamMember", teamMember);
-        if (from) params.set("from", from);
-        if (to) params.set("to", to);
+        if (range.kind === "all") {
+          if (from) params.set("from", from);
+          if (to) params.set("to", to);
+        } else {
+          params.set("from", from || range.from);
+          params.set("to", to || range.to);
+        }
         const [ordersResponse, optionsResponse] = await Promise.all([fetch(`/api/orders?${params.toString()}`, { cache: "no-store" }), fetch("/api/orders/options", { cache: "no-store" })]);
         const ordersPayload = await ordersResponse.json(); const optionsPayload = await optionsResponse.json();
         if (!ordersResponse.ok) throw new Error(errorMessage(ordersPayload));
@@ -58,7 +65,7 @@ export function OrderManagement() {
       } catch (loadError) { if (!cancelled) { setOrders([]); setError(loadError instanceof Error ? loadError.message : "Unable to load orders."); } } finally { if (!cancelled) setLoading(false); }
     }
     void load(); return () => { cancelled = true; };
-  }, [channel, from, orderStatus, paymentStatus, refreshKey, search, teamMember, to]);
+  }, [channel, from, orderStatus, paymentStatus, range, refreshKey, search, teamMember, to]);
 
   function openAdd() { setEditing(undefined); setFormError(null); setDialog("add"); }
   function openEdit(order: OrderResponse) { setEditing(order); setFormError(null); setDialog("edit"); }

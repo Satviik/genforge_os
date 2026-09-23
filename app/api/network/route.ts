@@ -26,13 +26,13 @@ export async function GET() {
   try {
     await connectToDatabase();
     const [team, customers, products, orders, expenses, jobs, materials, transactions] = await Promise.all([
-      TeamMember.find().lean(), Customer.find().lean(), Product.find().lean(), Order.find().lean(), Expense.find({ status: { $ne: "voided" } }).lean(), ProductionJob.find().lean(), Material.find().lean(), InventoryTransaction.find().lean(),
+      TeamMember.find({ active: true }).lean(), Customer.find({ status: "active" }).lean(), Product.find({ active: true }).lean(), Order.find({ status: { $ne: "cancelled" } }).lean(), Expense.find({ status: { $ne: "voided" } }).lean(), ProductionJob.find({ status: { $ne: "cancelled" } }).lean(), Material.find({ active: true }).lean(), InventoryTransaction.find().lean(),
     ]);
     const nodes: NetworkGraphNode[] = []; const edges: NetworkGraphEdge[] = [];
     const completedOrders = orders.filter((order) => order.status !== "cancelled" && order.paymentStatus !== "refunded" && (order.status === "delivered" || order.paymentStatus === "paid"));
     const productMap = new Map(products.map((product) => [stringId(product._id), product]));
     const revenue = completedOrders.reduce((sum, order) => sum + calculateOrderTotals(order).total, 0);
-    const productCost = completedOrders.reduce((sum, order) => sum + order.items.reduce((lineSum, item) => { const product = productMap.get(stringId(item.product)); const cost = product ? product.materialCost + product.productionCost + product.packagingCost + product.otherCost : 0; return lineSum + cost * item.quantity; }, 0), 0);
+    const productCost = completedOrders.reduce((sum, order) => sum + order.items.reduce((lineSum, item) => { const product = productMap.get(stringId(item.product)); const cost = item.unitCost ?? (product ? product.materialCost + product.productionCost + product.packagingCost + product.otherCost : 0); return lineSum + cost * item.quantity; }, 0), 0);
     const expenseTotal = expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const profit = revenue - productCost - expenseTotal;
 
@@ -49,6 +49,7 @@ export async function GET() {
     jobs.forEach((job) => { const id = `production-${job._id}`; addNode(nodes, id, "production", `Production ${stringId(job._id).slice(-5)}`, job.status, { Quantity: job.quantity, Printer: job.printer }); addEdge(edges, `order-${refId(job.order)}`, id); addEdge(edges, id, `product-${refId(job.product)}`); if (job.material) addEdge(edges, id, `material-${refId(job.material)}`); });
     materials.forEach((material) => { const id = `material-${material._id}`; addNode(nodes, id, "material", material.name, material.sku, { Quantity: material.currentQuantity, Unit: material.unit, Value: material.currentQuantity * material.costPerUnit }); });
     transactions.forEach((transaction) => { if (transaction.material) addEdge(edges, `material-${refId(transaction.material)}`, "genforge", "relationship", transaction.reason); });
-    return NextResponse.json({ nodes, edges, generatedAt: new Date().toISOString() });
+    const nodeIds = new Set(nodes.map((node) => node.id));
+    return NextResponse.json({ nodes, edges: edges.filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)), generatedAt: new Date().toISOString() });
   } catch { return NextResponse.json({ error: "Unable to load network data." }, { status: 500 }); }
 }

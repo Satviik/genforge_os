@@ -3,6 +3,7 @@ import { connectToDatabase } from "@/src/lib/mongodb";
 import { calculateProductMetrics } from "@/src/lib/product-calculations";
 import { productSchema } from "@/src/lib/validations/product";
 import Product from "@/src/models/Product";
+import { createNotification } from "@/src/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,7 @@ function serializeProduct(product: {
   _id: unknown;
   name: string;
   sku: string;
+  category?: string;
   description?: string;
   sellingPrice: number;
   materialCost: number;
@@ -24,6 +26,7 @@ function serializeProduct(product: {
     id: String(product._id),
     name: product.name,
     sku: product.sku,
+    category: product.category ?? "",
     description: product.description ?? "",
     sellingPrice: product.sellingPrice,
     materialCost: product.materialCost,
@@ -79,6 +82,7 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
     const product = await Product.create(parsed.data);
+    await createNotification({ type: "product_created", title: "Product created", message: `${product.name} was added to the catalog.`, entityType: "product", entityId: String(product._id), dedupeKey: `product_created:${product._id}` });
 
     return NextResponse.json({ product: serializeProduct(product.toObject()) }, { status: 201 });
   } catch (error) {

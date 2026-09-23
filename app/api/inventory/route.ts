@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/src/lib/mongodb";
 import { materialSchema } from "@/src/lib/validations/inventory";
 import Material from "@/src/models/Material";
+import Product from "@/src/models/Product";
 
 export const runtime = "nodejs";
 
@@ -15,8 +16,9 @@ export async function GET(request: Request) {
     const params = new URL(request.url).searchParams; const search = params.get("search")?.trim(); const active = params.get("active"); const filter: Record<string, unknown> = {};
     if (search) { const expression = new RegExp(escapeRegex(search), "i"); filter.$or = [{ name: expression }, { sku: expression }, { supplier: expression }]; }
     if (active === "true" || active === "false") filter.active = active === "true";
-    const materials = (await Material.find(filter).sort({ name: 1 }).lean()).map(serializeMaterial);
-    return NextResponse.json({ materials, summary: { totalMaterialValue: materials.filter((material) => material.active).reduce((sum, material) => sum + material.inventoryValue, 0), lowStockItems: materials.filter((material) => material.active && material.status !== "In Stock").length, materials: materials.filter((material) => material.active).length, finishedProducts: 0 } });
+    const [materialRecords, finishedProducts] = await Promise.all([Material.find(filter).sort({ name: 1 }).lean(), Product.countDocuments({ active: true })]);
+    const materials = materialRecords.map(serializeMaterial);
+    return NextResponse.json({ materials, summary: { totalMaterialValue: materials.filter((material) => material.active).reduce((sum, material) => sum + material.inventoryValue, 0), lowStockItems: materials.filter((material) => material.active && material.status !== "In Stock").length, materials: materials.filter((material) => material.active).length, finishedProducts } });
   } catch { return NextResponse.json({ error: "Unable to load inventory." }, { status: 500 }); }
 }
 

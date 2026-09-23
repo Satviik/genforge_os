@@ -3,6 +3,8 @@ import { connectToDatabase } from "@/src/lib/mongodb";
 import { expenseSchema, expensePaymentMethods } from "@/src/lib/validations/expense";
 import Expense, { expenseCategories } from "@/src/models/Expense";
 import TeamMember from "@/src/models/TeamMember";
+import { createNotification } from "@/src/lib/notifications";
+import { dateRangeFilter, getDateOnlyRange } from "@/src/lib/reporting-period";
 
 export const runtime = "nodejs";
 
@@ -12,7 +14,7 @@ function serializeExpense(expense: ExpenseRecord) {
   const addedBy = expense.addedBy && typeof expense.addedBy === "object" && "name" in expense.addedBy && "_id" in expense.addedBy ? expense.addedBy as { _id: unknown; name: string } : null;
   return { id: String(expense._id), category: expense.category, description: expense.description, amount: expense.amount, date: expense.date, paymentMethod: expense.paymentMethod, addedBy: addedBy ? { id: String(addedBy._id), name: addedBy.name } : null, notes: expense.notes ?? "", receiptReference: expense.receiptReference ?? "", status: expense.status, createdAt: expense.createdAt, updatedAt: expense.updatedAt };
 }
-function buildDateFilter(from: string | null, to: string | null) { return from || to ? { ...(from ? { $gte: new Date(`${from}T00:00:00`) } : {}), ...(to ? { $lte: new Date(`${to}T23:59:59.999`) } : {}) } : undefined; }
+function buildDateFilter(from: string | null, to: string | null) { return from || to ? dateRangeFilter(getDateOnlyRange(from, to)) : undefined; }
 
 export async function GET(request: Request) {
   try {
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
     const materialCategories = new Set(["Filament / Materials", "Packaging"]);
     const operatingCategories = new Set(["Electricity", "Machine Maintenance", "Equipment", "Marketing", "Software", "Marketplace Fees", "Shipping", "Other"]);
     return NextResponse.json({ expenses: serialized, summary: { totalExpenses: activeExpenses.reduce((sum, expense) => sum + expense.amount, 0), thisMonth: activeExpenses.filter((expense) => new Date(expense.date) >= monthStart).reduce((sum, expense) => sum + expense.amount, 0), materialExpenses: activeExpenses.filter((expense) => materialCategories.has(expense.category)).reduce((sum, expense) => sum + expense.amount, 0), operatingExpenses: activeExpenses.filter((expense) => operatingCategories.has(expense.category)).reduce((sum, expense) => sum + expense.amount, 0) } });
-  } catch { return NextResponse.json({ error: "Unable to load expenses." }, { status: 500 }); }
+  } catch (error) { if (error instanceof Error && error.message === "Invalid date range.") return NextResponse.json({ error: error.message }, { status: 400 }); return NextResponse.json({ error: "Unable to load expenses." }, { status: 500 }); }
 }
 
 export async function POST(request: Request) {
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
     if (addedBy) { const member = await TeamMember.findOne({ _id: addedBy, active: true }); if (!member) return NextResponse.json({ error: "Selected team member was not found." }, { status: 400 }); }
     const expense = await Expense.create({ ...input, addedBy: addedBy || undefined });
     const populated = await Expense.findById(expense._id).populate("addedBy", "name").lean();
+    await createNotification({ type: "expense_created", title: "Expense recorded", message: `${expense.description} was recorded.`, entityType: "expense", entityId: String(expense._id), dedupeKey: `expense_created:${expense._id}` });
     return NextResponse.json({ expense: serializeExpense(populated!) }, { status: 201 });
   } catch { return NextResponse.json({ error: "Unable to create expense." }, { status: 500 }); }
 }

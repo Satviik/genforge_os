@@ -10,7 +10,7 @@ export function RevenueByChannel({ data }: { data: ChannelRevenue[] }) {
     <Panel className="h-full">
       <PanelHeader
         title="Revenue by Channel"
-        action={<span className="text-[11px] text-gf-muted">This Month</span>}
+        action={<span className="text-[11px] text-gf-muted">Selected period</span>}
       />
       <div className="h-[220px]">
         <ResponsiveContainer width="100%" height="100%">

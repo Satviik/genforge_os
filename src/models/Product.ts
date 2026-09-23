@@ -3,6 +3,7 @@ import { Document, Model, Schema, model, models } from "mongoose";
 export interface IProduct {
   name: string;
   sku: string;
+  category?: string;
   description?: string;
   sellingPrice: number;
   materialCost: number;
@@ -21,6 +22,7 @@ const productSchema = new Schema<IProduct>(
   {
     name: { type: String, required: true, trim: true },
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    category: { type: String, trim: true },
     description: { type: String, trim: true },
     sellingPrice: { type: Number, required: true, min: 0 },
     materialCost: { type: Number, required: true, min: 0 },

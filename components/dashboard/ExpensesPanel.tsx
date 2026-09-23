@@ -11,7 +11,7 @@ export function ExpensesPanel({
 }) {
   return (
     <Panel className="h-full">
-      <PanelHeader title="Expenses" subtitle="This month" />
+      <PanelHeader title="Expenses" subtitle="Selected period" />
       <ul className="space-y-2">
         {items.map((item) => (
           <li key={item.id} className="flex items-center justify-between gap-3">

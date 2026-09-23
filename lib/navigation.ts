@@ -3,6 +3,7 @@ import {
   Camera,
   Factory,
   Globe,
+  Handshake,
   LayoutDashboard,
   Package,
   Phone,
@@ -33,10 +34,12 @@ export const operationsNav: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Network", href: "/dashboard/network", icon: Share2 },
   { label: "Team", href: "/dashboard/team", icon: Users },
+  { label: "People", href: "/dashboard/people", icon: Users },
   { label: "Products", href: "/dashboard/products", icon: Package },
   { label: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
   { label: "Production", href: "/dashboard/production", icon: Factory },
   { label: "Inventory", href: "/dashboard/inventory", icon: Warehouse },
+  { label: "Allocations", href: "/dashboard/allocations", icon: Handshake },
 ];
 
 export const financeNav: NavItem[] = [

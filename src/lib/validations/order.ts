@@ -15,6 +15,8 @@ export const orderItemSchema = z.object({
 export const orderSchema = z.object({
   customer: z.string().min(1),
   teamMember: z.string().min(1),
+  partner: z.string().optional().or(z.literal("")),
+  allocation: z.string().optional().or(z.literal("")),
   channel: z.enum(orderChannels),
   items: z.array(orderItemSchema).min(1, "Add at least one product."),
   discount: money.default(0),

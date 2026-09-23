@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "seed:demo:clear": "tsx scripts/seed-demo.ts --clear"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -30,6 +32,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "packageManager": "pnpm@11.25.0"

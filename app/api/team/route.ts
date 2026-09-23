@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/src/lib/mongodb";
 import { teamMemberRoles, teamMemberSchema } from "@/src/lib/validations/team-member";
 import TeamMember from "@/src/models/TeamMember";
+import { createNotification } from "@/src/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
 
     await connectToDatabase();
     const member = await TeamMember.create(parsed.data);
+    await createNotification({ type: "team_member_created", title: "Team member added", message: `${member.name} joined the GenForge team.`, entityType: "team", entityId: String(member._id), dedupeKey: `team_member_created:${member._id}` });
 
     return NextResponse.json(
       { member: serializeTeamMember(member.toObject()) },

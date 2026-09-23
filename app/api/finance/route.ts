@@ -4,6 +4,7 @@ import { calculateOrderTotals } from "@/src/lib/order-calculations";
 import Expense from "@/src/models/Expense";
 import Order from "@/src/models/Order";
 import Product from "@/src/models/Product";
+import { getDateOnlyRange } from "@/src/lib/reporting-period";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,7 @@ function getDateRange(searchParams: URLSearchParams) {
   if (preset === "thisMonth") return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: now };
   if (preset === "lastMonth") return { start: new Date(now.getFullYear(), now.getMonth() - 1, 1), end: new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999) };
   if (preset === "thisYear") return { start: new Date(now.getFullYear(), 0, 1), end: now };
-  if (preset === "custom") return { start: new Date(`${searchParams.get("from")}T00:00:00`), end: new Date(`${searchParams.get("to")}T23:59:59.999`) };
+  if (preset === "custom") return getDateOnlyRange(searchParams.get("from"), searchParams.get("to"));
   return { start: new Date(now.getTime() - 29 * 86400000), end: now };
 }
 
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
     const completedOrders = orders.filter((order) => order.status !== "cancelled" && order.paymentStatus !== "refunded" && (order.status === "delivered" || order.paymentStatus === "paid"));
     const revenueOrders = completedOrders.map((order) => ({ ...order, ...calculateOrderTotals(order) }));
     const revenue = revenueOrders.reduce((sum, order) => sum + order.total, 0);
-    const productCost = revenueOrders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + (productCosts.get(String(item.product)) ?? 0) * item.quantity, 0), 0);
+    const productCost = revenueOrders.reduce((sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + (item.unitCost ?? productCosts.get(String(item.product)) ?? 0) * item.quantity, 0), 0);
     const shippingCosts = revenueOrders.reduce((sum, order) => sum + order.shipping, 0);
     const operatingExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const totalCosts = productCost + operatingExpenses + shippingCosts;
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
 
     const timeline = new Map<string, { revenue: number; expenses: number; profit: number }>();
     const ensureDay = (key: string) => { if (!timeline.has(key)) timeline.set(key, { revenue: 0, expenses: 0, profit: 0 }); return timeline.get(key)!; };
-    revenueOrders.forEach((order) => { const day = ensureDay(dateKey(new Date(order.createdAt ?? start))); const cost = order.items.reduce((sum, item) => sum + (productCosts.get(String(item.product)) ?? 0) * item.quantity, 0) + order.shipping; day.revenue += order.total; day.profit += order.total - cost; });
+    revenueOrders.forEach((order) => { const day = ensureDay(dateKey(new Date(order.createdAt ?? start))); const cost = order.items.reduce((sum, item) => sum + (item.unitCost ?? productCosts.get(String(item.product)) ?? 0) * item.quantity, 0) + order.shipping; day.revenue += order.total; day.profit += order.total - cost; });
     expenses.forEach((expense) => { const day = ensureDay(dateKey(new Date(expense.date))); day.expenses += expense.amount; day.profit -= expense.amount; });
     const revenueOverTime = [...timeline.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, values]) => ({ date, label: displayDate(date), revenue: values.revenue, expenses: values.expenses }));
     const profitOverTime = [...timeline.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, values]) => ({ date, label: displayDate(date), profit: values.profit }));
@@ -55,12 +56,12 @@ export async function GET(request: Request) {
     const expenseTotals = new Map<string, number>(); expenses.forEach((expense) => expenseTotals.set(expense.category, (expenseTotals.get(expense.category) ?? 0) + expense.amount));
     const expensesByCategory = [...expenseTotals.entries()].sort(([, a], [, b]) => b - a).map(([category, amount], index) => ({ category, amount, color: expenseColors[index % expenseColors.length] }));
     const productTotals = new Map<string, { name: string; revenue: number; cost: number; units: number }>();
-    revenueOrders.forEach((order) => order.items.forEach((item) => { const key = String(item.product); const current = productTotals.get(key) ?? { name: item.productName, revenue: 0, cost: 0, units: 0 }; current.revenue += item.unitPrice * item.quantity; current.cost += (productCosts.get(key) ?? 0) * item.quantity; current.units += item.quantity; productTotals.set(key, current); }));
+    revenueOrders.forEach((order) => order.items.forEach((item) => { const key = String(item.product); const current = productTotals.get(key) ?? { name: item.productName, revenue: 0, cost: 0, units: 0 }; current.revenue += item.unitPrice * item.quantity; current.cost += (item.unitCost ?? productCosts.get(key) ?? 0) * item.quantity; current.units += item.quantity; productTotals.set(key, current); }));
     const productProfitability = [...productTotals.entries()].sort(([, a], [, b]) => (b.revenue - b.cost) - (a.revenue - a.cost)).slice(0, 8).map(([id, product]) => ({ id, name: product.name, units: product.units, revenue: product.revenue, cost: product.cost, profit: product.revenue - product.cost }));
     const teamTotals = new Map<string, { name: string; revenue: number }>(); revenueOrders.forEach((order) => { const member = order.teamMember && typeof order.teamMember === "object" && "name" in order.teamMember ? order.teamMember as { _id: unknown; name: string } : { _id: "", name: "Unassigned" }; const key = String(member._id); const current = teamTotals.get(key) ?? { name: member.name, revenue: 0 }; current.revenue += order.total; teamTotals.set(key, current); });
     const teamRevenue = [...teamTotals.entries()].sort(([, a], [, b]) => b.revenue - a.revenue).map(([id, member]) => ({ id, ...member }));
     const recentActivity = [...revenueOrders.map((order) => ({ id: String(order._id), date: order.createdAt, type: "revenue" as const, label: order.orderNumber, detail: `${order.channel} order`, amount: order.total })), ...expenses.map((expense) => ({ id: String(expense._id), date: expense.date, type: "expense" as const, label: expense.description, detail: expense.category, amount: expense.amount }))].sort((a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime()).slice(0, 10);
 
     return NextResponse.json({ range: { start, end }, overview: { revenue, productCosts: productCost, operatingExpenses, shippingCosts, totalCosts, grossProfit, netProfit, profitMargin: revenue > 0 ? (netProfit / revenue) * 100 : 0 }, revenueOverTime, revenueByChannel, expensesByCategory, profitOverTime, productProfitability, teamRevenue, recentActivity });
-  } catch { return NextResponse.json({ error: "Unable to load financial data." }, { status: 500 }); }
+  } catch (error) { if (error instanceof Error && error.message === "Invalid date range.") return NextResponse.json({ error: error.message }, { status: 400 }); return NextResponse.json({ error: "Unable to load financial data." }, { status: 500 }); }
 }

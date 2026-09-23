@@ -8,6 +8,7 @@ import type { ProductResponse } from "@/src/lib/product-types";
 export type ProductFormValues = {
   name: string;
   sku: string;
+  category: string;
   description: string;
   sellingPrice: string;
   materialCost: string;
@@ -22,6 +23,7 @@ export function productToForm(product?: ProductResponse): ProductFormValues {
     ? {
         name: product.name,
         sku: product.sku,
+        category: product.category,
         description: product.description,
         sellingPrice: String(product.sellingPrice),
         materialCost: String(product.materialCost),
@@ -33,6 +35,7 @@ export function productToForm(product?: ProductResponse): ProductFormValues {
     : {
         name: "",
         sku: "",
+        category: "",
         description: "",
         sellingPrice: "",
         materialCost: "",
@@ -98,6 +101,9 @@ export function ProductFormDialog({
               <input required value={form.sku} onChange={(event) => update("sku", event.target.value)} className={inputClass} />
             </Field>
           </div>
+          <Field label="Category">
+            <input value={form.category} onChange={(event) => update("category", event.target.value)} className={inputClass} />
+          </Field>
           <Field label="Description">
             <textarea rows={2} value={form.description} onChange={(event) => update("description", event.target.value)} className={`${inputClass} h-auto py-2`} />
           </Field>

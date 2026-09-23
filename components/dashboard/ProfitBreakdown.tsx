@@ -12,7 +12,7 @@ export function ProfitBreakdown({ data }: { data: ProfitBreakdownData }) {
     <Panel className="h-full">
       <PanelHeader
         title="Profit Breakdown"
-        action={<span className="text-[11px] text-gf-muted">This Month</span>}
+        action={<span className="text-[11px] text-gf-muted">Selected period</span>}
       />
       <div className="flex items-center gap-4">
         <div className="relative h-[140px] w-[140px] shrink-0">

@@ -5,6 +5,7 @@ const nonNegativeAmount = z.number().finite().min(0);
 export const productSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters.").max(120),
   sku: z.string().trim().min(1, "SKU is required.").max(50).transform((value) => value.toUpperCase()),
+  category: z.string().trim().max(80).optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   sellingPrice: nonNegativeAmount,
   materialCost: nonNegativeAmount,

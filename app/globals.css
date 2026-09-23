@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --background: #080706;
+  --foreground: #f5f1ec;
+  --gf-bg: #080706;
+  --gf-surface: #100d0a;
+  --gf-card: #15110d;
+  --gf-card-raised: #1b1611;
+  --gf-border: #2a1d14;
+  --gf-border-strong: #3b291c;
+  --gf-orange: #ff6a00;
+  --gf-orange-dim: #c24e00;
+  --gf-text: #f5f1ec;
+  --gf-secondary: #9b9188;
+  --gf-muted: #5f5851;
+  --gf-success: #67d391;
+  --gf-danger: #ff5c5c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-gf-bg: var(--gf-bg);
+  --color-gf-surface: var(--gf-surface);
+  --color-gf-card: var(--gf-card);
+  --color-gf-card-raised: var(--gf-card-raised);
+  --color-gf-border: var(--gf-border);
+  --color-gf-border-strong: var(--gf-border-strong);
+  --color-gf-orange: var(--gf-orange);
+  --color-gf-orange-dim: var(--gf-orange-dim);
+  --color-gf-text: var(--gf-text);
+  --color-gf-secondary: var(--gf-secondary);
+  --color-gf-muted: var(--gf-muted);
+  --color-gf-success: var(--gf-success);
+  --color-gf-danger: var(--gf-danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-gf: 10px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3b291c transparent;
+}
+
+html,
+body {
+  background: var(--gf-bg);
+  color: var(--gf-text);
+}
+
+body {
+  min-height: 100%;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+.gf-app-bg {
+  background-color: var(--gf-bg);
+  background-image:
+    radial-gradient(ellipse 70% 45% at 82% 8%, rgba(255, 106, 0, 0.14), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 8% 92%, rgba(255, 106, 0, 0.07), transparent 55%),
+    linear-gradient(rgba(255, 106, 0, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 106, 0, 0.035) 1px, transparent 1px);
+  background-size: auto, auto, 56px 56px, 56px 56px;
+}
+
+.gf-panel-glow {
+  box-shadow:
+    0 0 0 1px rgba(255, 106, 0, 0.04),
+    0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.gf-orange-glow {
+  box-shadow: 0 0 24px rgba(255, 106, 0, 0.28);
+}

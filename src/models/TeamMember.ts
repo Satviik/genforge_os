@@ -1,15 +1,15 @@
 import { Document, Model, Schema, model, models } from "mongoose";
 
 export type TeamMemberRole = "admin" | "marketing" | "sales" | "operations";
-export type TeamMemberStatus = "active" | "inactive";
 
 export interface ITeamMember {
   name: string;
   email: string;
   role: TeamMemberRole;
-  status: TeamMemberStatus;
+  channelFocus: string;
+  active: boolean;
   phone?: string;
-  avatarUrl?: string;
+  notes?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -26,9 +26,10 @@ const teamMemberSchema = new Schema<ITeamMember>(
       enum: ["admin", "marketing", "sales", "operations"],
       required: true,
     },
-    status: { type: String, enum: ["active", "inactive"], default: "active" },
+    channelFocus: { type: String, required: true, trim: true },
+    active: { type: Boolean, default: true },
     phone: { type: String, trim: true },
-    avatarUrl: { type: String, trim: true },
+    notes: { type: String, trim: true },
   },
   { timestamps: true },
 );

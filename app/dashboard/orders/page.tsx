@@ -1,7 +1,5 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { OrderManagement } from "@/components/dashboard/OrderManagement";
 
 export default function OrdersPage() {
-  return (
-    <ComingSoon title="Orders" description="Order pipeline, payments, and fulfillment status." />
-  );
+  return <OrderManagement />;
 }

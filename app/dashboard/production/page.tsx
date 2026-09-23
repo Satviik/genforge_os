@@ -1,10 +1,5 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { ProductionManagement } from "@/components/dashboard/ProductionManagement";
 
 export default function ProductionPage() {
-  return (
-    <ComingSoon
-      title="Production"
-      description="Print queues, machine load, and build progress."
-    />
-  );
+  return <ProductionManagement />;
 }

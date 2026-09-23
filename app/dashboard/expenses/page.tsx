@@ -1,7 +1,5 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { ExpenseManagement } from "@/components/dashboard/ExpenseManagement";
 
 export default function ExpensesPage() {
-  return (
-    <ComingSoon title="Expenses" description="Operating costs, materials, and studio spend." />
-  );
+  return <ExpenseManagement />;
 }

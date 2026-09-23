@@ -4,11 +4,12 @@ export interface IProduct {
   name: string;
   sku: string;
   description?: string;
-  category?: string;
-  price: number;
-  cost: number;
-  stockQuantity: number;
-  isActive: boolean;
+  sellingPrice: number;
+  materialCost: number;
+  productionCost: number;
+  packagingCost: number;
+  otherCost: number;
+  active: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -21,11 +22,12 @@ const productSchema = new Schema<IProduct>(
     name: { type: String, required: true, trim: true },
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true },
     description: { type: String, trim: true },
-    category: { type: String, trim: true },
-    price: { type: Number, required: true, min: 0 },
-    cost: { type: Number, required: true, min: 0 },
-    stockQuantity: { type: Number, required: true, min: 0, default: 0 },
-    isActive: { type: Boolean, default: true },
+    sellingPrice: { type: Number, required: true, min: 0 },
+    materialCost: { type: Number, required: true, min: 0 },
+    productionCost: { type: Number, required: true, min: 0 },
+    packagingCost: { type: Number, required: true, min: 0 },
+    otherCost: { type: Number, required: true, min: 0 },
+    active: { type: Boolean, default: true },
   },
   { timestamps: true },
 );

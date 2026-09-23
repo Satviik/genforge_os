@@ -1,10 +1,5 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { NetworkVisualization } from "@/components/dashboard/NetworkVisualization";
 
 export default function NetworkPage() {
-  return (
-    <ComingSoon
-      title="Network"
-      description="Relationship graph across customers, products, channels, and production."
-    />
-  );
+  return <NetworkVisualization />;
 }

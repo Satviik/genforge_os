@@ -1,10 +1,5 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { InventoryManagement } from "@/components/dashboard/InventoryManagement";
 
 export default function InventoryPage() {
-  return (
-    <ComingSoon
-      title="Inventory"
-      description="Filament, resin, packaging, and finished-goods stock."
-    />
-  );
+  return <InventoryManagement />;
 }
